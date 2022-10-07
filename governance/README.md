@@ -1,4 +1,4 @@
-# SPL Governance
+# SPL Governance - CI test
 
 SPL Governance is a program the chief purpose of which is to provide core building blocks and primitives to create
 Decentralized Autonomous Organizations (DAOs) on Solana blockchain.
