@@ -10,7 +10,7 @@ use spl_governance::{
     error::GovernanceError,
     state::{
         enums::{ProposalState, VoteThreshold},
-        proposal::{OptionVoteResult, VoteType},
+        proposal::{OptionVoteResult, VoteType, ProposalOptionData},
         vote_record::{Vote, VoteChoice},
     },
 };
@@ -37,7 +37,11 @@ async fn test_create_proposal_with_single_choice_options_and_deny_option() {
         .await
         .unwrap();
 
-    let options = vec!["option 1".to_string(), "option 2".to_string()];
+
+    let options = vec![
+        ProposalOptionData::with_label("option 1".to_string()),
+        ProposalOptionData::with_label("option 2".to_string()),
+    ];
 
     // Act
     let proposal_cookie = governance_test
@@ -83,7 +87,10 @@ async fn test_create_proposal_with_multiple_choice_options_and_without_deny_opti
         .await
         .unwrap();
 
-    let options = vec!["option 1".to_string(), "option 2".to_string()];
+    let options = vec![
+        ProposalOptionData::with_label("option 1".to_string()),
+        ProposalOptionData::with_label("option 2".to_string()),
+    ];
 
     // Act
     let proposal_cookie = governance_test
@@ -144,7 +151,10 @@ async fn test_insert_transaction_with_proposal_not_executable_error() {
         .with_multi_option_proposal(
             &token_owner_record_cookie,
             &mut governance_cookie,
-            vec!["option 1".to_string(), "option 2".to_string()],
+            vec![
+                ProposalOptionData::with_label("option 1".to_string()),
+                ProposalOptionData::with_label("option 2".to_string()),
+            ],
             false,
             VoteType::SingleChoice,
         )
@@ -188,7 +198,10 @@ async fn test_insert_transactions_for_multiple_options() {
         .with_multi_option_proposal(
             &token_owner_record_cookie,
             &mut governance_cookie,
-            vec!["option 1".to_string(), "option 2".to_string()],
+            vec![
+                ProposalOptionData::with_label("option 1".to_string()),
+                ProposalOptionData::with_label("option 2".to_string()),
+            ],
             true,
             VoteType::SingleChoice,
         )
@@ -262,7 +275,10 @@ async fn test_vote_on_none_executable_single_choice_proposal_with_multiple_optio
         .with_multi_option_proposal(
             &token_owner_record_cookie,
             &mut governance_cookie,
-            vec!["option 1".to_string(), "option 2".to_string()],
+            vec![
+                ProposalOptionData::with_label("option 1".to_string()),
+                ProposalOptionData::with_label("option 2".to_string()),
+            ],
             false,
             VoteType::SingleChoice,
         )
@@ -357,9 +373,9 @@ async fn test_vote_on_none_executable_multi_choice_proposal_with_multiple_option
             &token_owner_record_cookie,
             &mut governance_cookie,
             vec![
-                "option 1".to_string(),
-                "option 2".to_string(),
-                "option 3".to_string(),
+                ProposalOptionData::with_label("option 1".to_string()),
+                ProposalOptionData::with_label("option 2".to_string()),
+                ProposalOptionData::with_label("option 3".to_string()),
             ],
             false,
             VoteType::MultiChoice {
@@ -486,9 +502,9 @@ async fn test_vote_on_executable_proposal_with_multiple_options_and_partial_succ
             &token_owner_record_cookie1,
             &mut governance_cookie,
             vec![
-                "option 1".to_string(),
-                "option 2".to_string(),
-                "option 3".to_string(),
+                ProposalOptionData::with_label("option 1".to_string()),
+                ProposalOptionData::with_label("option 2".to_string()),
+                ProposalOptionData::with_label("option 3".to_string()),
             ],
             true,
             VoteType::MultiChoice {
@@ -648,9 +664,9 @@ async fn test_execute_proposal_with_multiple_options_and_partial_success() {
             &token_owner_record_cookie1,
             &mut governance_cookie,
             vec![
-                "option 1".to_string(),
-                "option 2".to_string(),
-                "option 3".to_string(),
+                ProposalOptionData::with_label("option 1".to_string()),
+                ProposalOptionData::with_label("option 2".to_string()),
+                ProposalOptionData::with_label("option 3".to_string()),
             ],
             true,
             VoteType::MultiChoice {
@@ -856,9 +872,9 @@ async fn test_try_execute_proposal_with_multiple_options_and_full_deny() {
             &token_owner_record_cookie1,
             &mut governance_cookie,
             vec![
-                "option 1".to_string(),
-                "option 2".to_string(),
-                "option 3".to_string(),
+                ProposalOptionData::with_label("option 1".to_string()),
+                ProposalOptionData::with_label("option 2".to_string()),
+                ProposalOptionData::with_label("option 3".to_string()),
             ],
             true,
             VoteType::MultiChoice {
@@ -1014,9 +1030,9 @@ async fn test_create_proposal_with_10_options_and_cast_vote() {
 
     let options_count = 10;
 
-    let options: Vec<String> = (0..options_count)
+    let options: Vec<ProposalOptionData> = (0..options_count)
         .into_iter()
-        .map(|n| format!("option {:?}", n))
+        .map(|n| ProposalOptionData::with_label(format!("option {}", n)))
         .collect();
 
     let options_len = options.len() as u8;
@@ -1120,10 +1136,10 @@ async fn test_vote_multi_weighted_choice_proposal_non_executable() {
             &token_owner_record_cookie,
             &mut governance_cookie,
             vec![
-                "option 1".to_string(),
-                "option 2".to_string(),
-                "option 3".to_string(),
-                "option 4".to_string(),
+                ProposalOptionData::with_label("option 1".to_string()),
+                ProposalOptionData::with_label("option 2".to_string()),
+                ProposalOptionData::with_label("option 3".to_string()),
+                ProposalOptionData::with_label("option 4".to_string()),
             ],
             false,
             VoteType::MultiChoice {
@@ -1264,10 +1280,10 @@ async fn test_vote_multi_weighted_choice_proposal_with_partial_success() {
             &token_owner_record_cookie1,
             &mut governance_cookie,
             vec![
-                "option 1".to_string(),
-                "option 2".to_string(),
-                "option 3".to_string(),
-                "option 4".to_string(),
+                ProposalOptionData::with_label("option 1".to_string()),
+                ProposalOptionData::with_label("option 2".to_string()),
+                ProposalOptionData::with_label("option 3".to_string()),
+                ProposalOptionData::with_label("option 4".to_string()),
             ],
             true,
             VoteType::MultiChoice {
@@ -1488,9 +1504,9 @@ async fn test_vote_multi_weighted_choice_proposal_with_multi_success() {
             &token_owner_record_cookie1,
             &mut governance_cookie,
             vec![
-                "option 1".to_string(),
-                "option 2".to_string(),
-                "option 3".to_string(),
+                ProposalOptionData::with_label("option 1".to_string()),
+                ProposalOptionData::with_label("option 2".to_string()),
+                ProposalOptionData::with_label("option 3".to_string()),
             ],
             true,
             VoteType::MultiChoice {
@@ -1672,7 +1688,10 @@ async fn test_vote_multi_weighted_choice_proposal_executable_with_full_deny() {
         .with_multi_option_proposal(
             &token_owner_record_cookie1,
             &mut governance_cookie,
-            vec!["option 1".to_string(), "option 2".to_string()],
+            vec![
+                ProposalOptionData::with_label("option 1".to_string()),
+                ProposalOptionData::with_label("option 2".to_string()),
+            ],
             true,
             VoteType::MultiChoice {
                 choice_type: MultiChoiceType::Weighted,
@@ -1800,10 +1819,10 @@ async fn test_vote_multi_choice_proposal_with_limiting_number_of_choices() {
         .await
         .unwrap();
 
-    let options_number: u8 = 201;
-    let mut options: Vec<String> = Vec::new();
+    let options_number: u8 = 120;
+    let mut options: Vec<ProposalOptionData> = Vec::new();
     for i in 1..options_number + 1 {
-        options.push(format!("option {}", i));
+        options.push(ProposalOptionData::with_label(format!("{}", i)));
     }
     let mut proposal_cookie = governance_test
         .with_multi_option_proposal(

@@ -57,6 +57,7 @@ use spl_governance::{
     },
     tools::bpf_loader_upgradeable::get_program_data_address,
 };
+use spl_governance::state::proposal::ProposalOptionData;
 use spl_governance_addin_api::{
     max_voter_weight::MaxVoterWeightRecord,
     voter_weight::{VoterWeightAction, VoterWeightRecord},
@@ -1901,7 +1902,7 @@ impl GovernanceProgramTest {
         &mut self,
         token_owner_record_cookie: &TokenOwnerRecordCookie,
         governance_cookie: &mut GovernanceCookie,
-        options: Vec<String>,
+        options: Vec<ProposalOptionData>,
         use_deny_option: bool,
         vote_type: VoteType,
     ) -> Result<ProposalCookie, ProgramError> {
@@ -1943,7 +1944,9 @@ impl GovernanceProgramTest {
         governance_cookie: &mut GovernanceCookie,
         instruction_override: F,
     ) -> Result<ProposalCookie, ProgramError> {
-        let options = vec!["Yes".to_string()];
+        let options = vec![
+            ProposalOptionData::with_label("Yes".to_string()),
+        ];
 
         self.with_proposal_using_instruction_impl(
             token_owner_record_cookie,
@@ -1961,7 +1964,7 @@ impl GovernanceProgramTest {
         &mut self,
         token_owner_record_cookie: &TokenOwnerRecordCookie,
         governance_cookie: &mut GovernanceCookie,
-        options: Vec<String>,
+        options: Vec<ProposalOptionData>,
         use_deny_option: bool,
         vote_type: VoteType,
         instruction_override: F,
@@ -2015,7 +2018,8 @@ impl GovernanceProgramTest {
         let proposal_options: Vec<ProposalOption> = options
             .iter()
             .map(|o| ProposalOption {
-                label: o.to_string(),
+                label: o.label.to_string(),
+                pubkey: o.pubkey,
                 vote_weight: 0,
                 vote_result: OptionVoteResult::None,
                 transactions_executed_count: 0,

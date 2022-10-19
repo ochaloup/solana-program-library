@@ -58,6 +58,10 @@ pub struct ProposalOption {
     /// Option label
     pub label: String,
 
+    /// Option identifier. May be used for gauge voting or other cases where there is no transaction
+    /// to execute while the option needs to be identified with an external entity.
+    pub pubkey: Option<Pubkey>,
+
     /// Vote weight for the option
     pub vote_weight: u64,
 
@@ -72,6 +76,26 @@ pub struct ProposalOption {
 
     /// The index of the the next transaction to be added
     pub transactions_next_index: u16,
+}
+
+/// Option data transfer object, to be used when creating the proposal to pass in label and ids.
+#[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize, BorshSchema)]
+pub struct ProposalOptionData {
+    /// Option label string
+    pub label: String,
+
+    /// Option identifier
+    pub pubkey: Option<Pubkey>,
+}
+
+impl ProposalOptionData {
+    /// Option data constructor with label defined and pubkey is None
+    pub fn with_label(label: String) -> Self {
+        ProposalOptionData{
+            label,
+            pubkey: None,
+        }
+    }
 }
 
 /// Proposal vote type
@@ -226,7 +250,11 @@ pub struct ProposalV2 {
 
 impl AccountMaxSize for ProposalV2 {
     fn get_max_size(&self) -> Option<usize> {
-        let options_size: usize = self.options.iter().map(|o| o.label.len() + 19).sum();
+        let options_size: usize = self.options.iter().map(|o| {
+            let mut option_size = o.label.len() + 19;
+            option_size += if o.pubkey.is_none() { 1 } else { 1 + 32 };
+            option_size
+        }).sum();
         Some(self.name.len() + self.description_link.len() + options_size + 296)
     }
 }
@@ -970,6 +998,7 @@ pub fn get_proposal_data(
             vote_type: VoteType::SingleChoice,
             options: vec![ProposalOption {
                 label: "Yes".to_string(),
+                pubkey: None,
                 vote_weight: proposal_data_v1.yes_votes_count,
                 vote_result,
                 transactions_executed_count: proposal_data_v1.instructions_executed_count,
@@ -1062,7 +1091,7 @@ pub fn get_proposal_address<'a>(
 
 /// Assert options to create proposal are valid for the Proposal vote_type
 pub fn assert_valid_proposal_options(
-    options: &[String],
+    options: &[ProposalOptionData],
     vote_type: &VoteType,
 ) -> Result<(), ProgramError> {
     if options.is_empty() {
@@ -1086,7 +1115,7 @@ pub fn assert_valid_proposal_options(
     // TODO: Check for duplicated option labels
     // The options are identified by index so it's ok for now
 
-    if options.iter().any(|o| o.is_empty()) {
+    if options.iter().any(|o| o.label.is_empty()) {
         return Err(GovernanceError::InvalidProposalOptions.into());
     }
 
@@ -1134,6 +1163,7 @@ mod test {
             vote_type: VoteType::SingleChoice,
             options: vec![ProposalOption {
                 label: "yes".to_string(),
+                pubkey: None,
                 vote_weight: 0,
                 vote_result: OptionVoteResult::None,
                 transactions_executed_count: 10,
@@ -1159,6 +1189,7 @@ mod test {
         proposal.options = vec![
             ProposalOption {
                 label: "option 1".to_string(),
+                pubkey: Some(Pubkey::new_unique()),
                 vote_weight: 0,
                 vote_result: OptionVoteResult::None,
                 transactions_executed_count: 10,
@@ -1167,6 +1198,7 @@ mod test {
             },
             ProposalOption {
                 label: "option 2".to_string(),
+                pubkey: Some(Pubkey::new_unique()),
                 vote_weight: 0,
                 vote_result: OptionVoteResult::None,
                 transactions_executed_count: 10,
@@ -1175,6 +1207,7 @@ mod test {
             },
             ProposalOption {
                 label: "option 3".to_string(),
+                pubkey: Some(Pubkey::new_unique()),
                 vote_weight: 0,
                 vote_result: OptionVoteResult::None,
                 transactions_executed_count: 10,
@@ -2481,7 +2514,10 @@ mod test {
             max_winning_options: 3,
         };
 
-        let options = vec!["option 1".to_string(), "option 2".to_string()];
+        let options = vec![
+            ProposalOptionData::with_label("option 1".to_string()),
+            ProposalOptionData::with_label("option 2".to_string()),
+        ];
 
         // Act
         let result = assert_valid_proposal_options(&options, &vote_type);
@@ -2532,9 +2568,9 @@ mod test {
         };
 
         let options = vec![
-            "option 1".to_string(),
-            "option 2".to_string(),
-            "option 3".to_string(),
+            ProposalOptionData::with_label("option 1".to_string()),
+            ProposalOptionData::with_label("option 2".to_string()),
+            ProposalOptionData::with_label("option 3".to_string()),
         ];
 
         // Act
@@ -2554,9 +2590,9 @@ mod test {
         };
 
         let options = vec![
-            "".to_string(),
-            "option 2".to_string(),
-            "option 3".to_string(),
+            ProposalOptionData::with_label("".to_string()),
+            ProposalOptionData::with_label("option 2".to_string()),
+            ProposalOptionData::with_label("option 3".to_string()),
         ];
 
         // Act
@@ -2723,7 +2759,10 @@ mod test {
             max_winning_options: 3,
         };
 
-        let options = vec!["option 1".to_string(), "option 2".to_string()];
+        let options = vec![
+            ProposalOptionData::with_label("option 1".to_string()),
+            ProposalOptionData::with_label("option 2".to_string()),
+        ];
 
         // Act
         let result = assert_valid_proposal_options(&options, &vote_type);
@@ -2761,9 +2800,9 @@ mod test {
         };
 
         let options = vec![
-            "option 1".to_string(),
-            "option 2".to_string(),
-            "option 3".to_string(),
+            ProposalOptionData::with_label("option 1".to_string()),
+            ProposalOptionData::with_label("option 2".to_string()),
+            ProposalOptionData::with_label("option 2".to_string()),
         ];
 
         // Act
@@ -2784,9 +2823,9 @@ mod test {
         };
 
         let options = vec![
-            "".to_string(),
-            "option 2".to_string(),
-            "option 3".to_string(),
+            ProposalOptionData::with_label("".to_string()),
+            ProposalOptionData::with_label("option 2".to_string()),
+            ProposalOptionData::with_label("option 3".to_string()),
         ];
 
         // Act
@@ -2806,17 +2845,17 @@ mod test {
         };
 
         let options = vec![
-            "option 1".to_string(),
-            "option 2".to_string(),
-            "option 3".to_string(),
-            "option 4".to_string(),
-            "option 5".to_string(),
-            "option 6".to_string(),
-            "option 7".to_string(),
-            "option 8".to_string(),
-            "option 9".to_string(),
-            "option 10".to_string(),
-            "option 11".to_string(),
+            ProposalOptionData::with_label("option 1".to_string()),
+            ProposalOptionData::with_label("option 2".to_string()),
+            ProposalOptionData::with_label("option 3".to_string()),
+            ProposalOptionData::with_label("option 4".to_string()),
+            ProposalOptionData::with_label("option 5".to_string()),
+            ProposalOptionData::with_label("option 6".to_string()),
+            ProposalOptionData::with_label("option 7".to_string()),
+            ProposalOptionData::with_label("option 8".to_string()),
+            ProposalOptionData::with_label("option 9".to_string()),
+            ProposalOptionData::with_label("option 10".to_string()),
+            ProposalOptionData::with_label("option 11".to_string()),
         ];
 
         // Act
@@ -2835,7 +2874,10 @@ mod test {
             max_winning_options: 1,
         };
 
-        let options = vec!["option 1".to_string(), "option 1".to_string()];
+        let options = vec![
+            ProposalOptionData::with_label("option 1".to_string()),
+            ProposalOptionData::with_label("option 2".to_string()),
+        ];
 
         // Act
         let result = assert_valid_proposal_options(&options, &vote_type);

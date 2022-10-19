@@ -1,5 +1,6 @@
 //! Program instructions
 
+use crate::state::proposal::ProposalOptionData;
 use crate::{
     state::{
         enums::MintMaxVoterWeightSource,
@@ -189,7 +190,7 @@ pub enum GovernanceInstruction {
 
         #[allow(dead_code)]
         /// Proposal options
-        options: Vec<String>,
+        options: Vec<ProposalOptionData>,
 
         #[allow(dead_code)]
         /// Indicates whether the proposal has the deny option
@@ -895,7 +896,7 @@ pub fn create_proposal(
     description_link: String,
     governing_token_mint: &Pubkey,
     vote_type: VoteType,
-    options: Vec<String>,
+    options: Vec<ProposalOptionData>,
     use_deny_option: bool,
     proposal_index: u32,
 ) -> Instruction {
