@@ -74,6 +74,12 @@ pub struct ProposalOption {
     pub transactions_next_index: u16,
 }
 
+impl AccountMaxSize for ProposalOption {
+    fn get_max_size(&self) -> Option<usize> {
+        Some(self.label.len() + 19)
+    }
+}
+
 /// Proposal vote type
 #[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize, BorshSchema)]
 pub enum VoteType {
@@ -226,7 +232,7 @@ pub struct ProposalV2 {
 
 impl AccountMaxSize for ProposalV2 {
     fn get_max_size(&self) -> Option<usize> {
-        let options_size: usize = self.options.iter().map(|o| o.label.len() + 19).sum();
+        let options_size: usize = self.options.iter().map(|o| o.get_max_size().unwrap()).sum();
         Some(self.name.len() + self.description_link.len() + options_size + 296)
     }
 }
@@ -772,6 +778,15 @@ impl ProposalV2 {
         Ok(())
     }
 
+    /// Checks if proposal option can be added
+    pub fn assert_can_insert_proposal_options(&self) -> Result<(), ProgramError> {
+        if self.assert_is_draft_state().is_err() {
+            return Err(GovernanceError::InvalidStateCannotEditTransactions.into());
+        }
+
+        Ok(())
+    }
+
     /// Checks if Instructions can be executed for the Proposal in the given state
     pub fn assert_can_execute_transaction(
         &self,
@@ -1128,10 +1143,6 @@ pub fn assert_valid_proposal_options(
     options: &[String],
     vote_type: &VoteType,
 ) -> Result<(), ProgramError> {
-    if options.is_empty() {
-        return Err(GovernanceError::InvalidProposalOptions.into());
-    }
-
     if let VoteType::MultiChoice {
         choice_type: _choice_type,
         max_voter_options,

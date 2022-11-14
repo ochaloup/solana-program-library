@@ -276,6 +276,7 @@ impl GovernanceChatProgramTest {
             options,
             use_deny_option,
             proposal_index,
+            None,
         );
 
         self.bench

@@ -438,6 +438,14 @@ pub enum GovernanceError {
     /// Voter weight threshold disabled
     #[error("Voter weight threshold disabled")]
     VoterWeightThresholdDisabled, // 605
+
+    /// Proposal data is not available for size calculation
+    #[error("Size of proposal data cannot be calculated")]
+    CannotCalculateSizeOfProposalData, // 606
+
+    /// Cannot fit new options data to proposal account
+    #[error("New options data size exceeds allocated proposal account space")]
+    InsertProposalOptionsDataExceedsAccountSize, // 607
 }
 
 impl PrintProgramError for GovernanceError {
