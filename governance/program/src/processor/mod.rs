@@ -3,6 +3,7 @@
 mod process_add_signatory;
 mod process_cancel_proposal;
 mod process_cast_vote;
+mod process_complete_proposal;
 mod process_create_governance;
 mod process_create_mint_governance;
 mod process_create_native_treasury;
@@ -65,6 +66,7 @@ use solana_program::{
     account_info::AccountInfo, borsh::try_from_slice_unchecked, entrypoint::ProgramResult, msg,
     program_error::ProgramError, pubkey::Pubkey,
 };
+use crate::processor::process_complete_proposal::process_complete_proposal;
 
 /// Processes an instruction
 pub fn process_instruction(
@@ -254,6 +256,10 @@ pub fn process_instruction(
 
         GovernanceInstruction::RevokeGoverningTokens { amount } => {
             process_revoke_governing_tokens(program_id, accounts, amount)
+        }
+
+        GovernanceInstruction::CompleteProposal {} => {
+            process_complete_proposal(program_id, accounts)
         }
     }
 }
