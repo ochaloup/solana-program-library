@@ -494,8 +494,15 @@ pub fn assert_is_valid_vote_threshold(vote_threshold: &VoteThreshold) -> Result<
                 return Err(GovernanceError::InvalidVoteThresholdPercentage.into());
             }
         }
-        VoteThreshold::QuorumPercentage(_) => {
-            return Err(GovernanceError::VoteThresholdTypeNotSupported.into());
+        VoteThreshold::QuorumPercentage(quorum_threshold_percentage) => {
+            if !(0..=100).contains(&quorum_threshold_percentage) {
+                return Err(GovernanceError::InvalidVoteThresholdPercentage.into());
+            }
+        }
+        VoteThreshold::QuorumPercentageAllSucceed(quorum_threshold_percentage_all_succesful) => {
+            if !(0..=100).contains(&quorum_threshold_percentage_all_succesful) {
+                return Err(GovernanceError::InvalidVoteThresholdPercentage.into());
+            }
         }
         VoteThreshold::Disabled => {}
     }
